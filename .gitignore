@@ -1,0 +1,6 @@
+mlruns/
+__pycache__/
+.env
+*.pkl
+*.joblib
+data/processed/
