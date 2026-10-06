@@ -34,8 +34,9 @@ def load_clean_and_scale(input_path="data/raw/dataset-diabete.csv", scaler_outpu
 
     os.makedirs(os.path.dirname(scaler_output_path), exist_ok=True)
     joblib.dump(scaler, scaler_output_path)
+    df_cleaned.to_csv("data/processed/df_cleaned.csv", index=False)
     
     return df_scaled
 
-final_df = load_clean_and_scale("../data/raw/dataset-diabete.csv", "../models/scaler.joblib")
+final_df = load_clean_and_scale("data/raw/dataset-diabete.csv", "models/scaler.joblib")
 print("Pipeline complete. Scaled dataframe shape:", final_df.shape)
