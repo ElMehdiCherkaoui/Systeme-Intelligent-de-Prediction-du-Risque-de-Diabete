@@ -81,7 +81,6 @@ def train():
         "Cluster"
     ).mean(numeric_only=True)
 
-    cluster_counts = df_scaled_local["Cluster"].value_counts()
 
     cluster_haut_risk = cluster_summary1[
         (cluster_summary1["Glucose"] > 126) &
@@ -316,7 +315,9 @@ def train():
         "models/best_model.joblib"
     )
 
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri(
+        os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+    )
 
     experiment_name = "Diabetes_Risk_Prediction"
     mlflow.set_experiment(experiment_name)
@@ -450,7 +451,10 @@ def train():
         )
 
     client = MlflowClient(
-        tracking_uri="http://mlflow:5000"
+        tracking_uri=os.getenv(
+            "MLFLOW_TRACKING_URI",
+            "http://localhost:5000"
+        )
     )
 
     model_name = "Diabetes_Risk_Classifier"
