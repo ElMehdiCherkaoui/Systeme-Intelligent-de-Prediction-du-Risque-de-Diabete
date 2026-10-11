@@ -1,0 +1,60 @@
+
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.17.2
+    ports:
+      - "5000:5000"
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:////mlflow-data/mlflow.db
+      --default-artifact-root /mlartifacts
+    volumes:
+      - ./mlflow-data:/mlflow-data
+      - ./mlartifacts:/mlartifacts
+
+  api:
+    build:
+      context: .
+      dockerfile: app/api/Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mlflow
+    volumes:
+      - ./models:/app/models
+      - ./src:/app/src
+
+  frontend:
+    build:
+      context: .
+      dockerfile: app/frontend/Dockerfile
+    ports:
+      - "8502:8501"
+    depends_on:
+      - api
+
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    image: diabetes-airflow:2.10.3
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      GIT_PYTHON_REFRESH: "quiet"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/project/src
+      - ./data:/opt/airflow/project/data
+      - ./models:/opt/airflow/project/models
+      - ./artifacts:/opt/airflow/project/artifacts
+      - ./mlartifacts:/mlartifacts
+    command: >
+      bash -c "airflow db migrate &&
+      (airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true) &&
+      airflow standalone"
